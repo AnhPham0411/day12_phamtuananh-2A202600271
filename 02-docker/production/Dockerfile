@@ -17,16 +17,16 @@ FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
-# Cài build dependencies (cần cho một số packages như numpy)
-RUN apt-get update && apt-get install -y \
-    gcc \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+# Bo qua buoc install gcc vi dang rat cham, thu build truc tiep
+# RUN apt-get update && apt-get install -y \
+#     gcc \
+#     libpq-dev \
+#     && rm -rf /var/lib/apt/lists/*
 
 # Copy và cài requirements
 # Dùng --user để install vào /root/.local (dễ copy sang stage 2)
-COPY 02-docker/production/requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+COPY requirements.txt .
+RUN pip install --default-timeout=100 --no-cache-dir --user -r requirements.txt
 
 
 # ──────────────────────────────────────────────────────────
@@ -45,7 +45,7 @@ WORKDIR /app
 COPY --from=builder /root/.local /home/appuser/.local
 
 # Copy source code
-COPY 02-docker/production/main.py .
+COPY main.py .
 
 # Copy utils from project root
 RUN mkdir -p /app/utils
@@ -74,7 +74,7 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", 
 # ============================================================
 # Build commands (from project root):
 #   cd ../../  # Go to project root
-#   docker build -f 02-docker/production/Dockerfile -t agent-production .
+#   docker build -f Dockerfile -t agent-production .
 #   docker images agent-production  ← kiểm tra size
 #   docker run -p 8000:8000 -e ENVIRONMENT=production agent-production
 # ============================================================

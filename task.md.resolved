@@ -1,0 +1,360 @@
+# ✅ Day 12 Lab — Checklist Đầy Đủ
+
+> **Deadline:** 17/4/2026 | **Điểm tối đa:** 100 điểm  
+> Nguồn: [README.md](file:///c:/Users/bintu/Desktop/baitapai/day12/README.md), [CODE_LAB.md](file:///c:/Users/bintu/Desktop/baitapai/day12/CODE_LAB.md), [DAY12_DELIVERY_CHECKLIST.md](file:///c:/Users/bintu/Desktop/baitapai/day12/DAY12_DELIVERY_CHECKLIST.md), [QUICK_START.md](file:///c:/Users/bintu/Desktop/baitapai/day12/QUICK_START.md)
+
+---
+
+## 🔧 Chuẩn Bị Môi Trường
+
+- [x] Kiểm tra Python phiên bản 3.11+: `python --version`
+- [x] Kiểm tra Docker & Docker Compose: `docker --version` và `docker compose version`
+- [x] Kiểm tra Git: `git --version`
+- [x] Có VS Code hoặc text editor
+- [x] **Không cần** API key thật — dùng mock LLM có sẵn trong `utils/`
+
+---
+
+## Part 1: Localhost vs Production (30 phút | Checkpoint 1)
+
+### Exercise 1.1 — Phát hiện anti-patterns
+- [x] Vào `01-localhost-vs-production/develop/`
+- [x] Đọc `app.py` và **tìm ít nhất 5 vấn đề**:
+  - [x] API key bị hardcode
+  - [x] Port bị cố định
+  - [x] Debug mode đang bật
+  - [x] Không có health check endpoint
+  - [x] Không có graceful shutdown
+
+### Exercise 1.2 — Chạy basic version
+- [x] `pip install -r requirements.txt`
+- [x] `python app.py`
+- [x] Test bằng curl:  
+  `curl http://localhost:8000/ask -X POST -H "Content-Type: application/json" -d '{"question": "Hello"}'`
+- [x] Xác nhận nhận được response (nhưng chưa production-ready)
+
+### Exercise 1.3 — So sánh với production version
+- [x] Vào `01-localhost-vs-production/production/`
+- [x] `cp .env.example .env` rồi `pip install -r requirements.txt`
+- [x] `python app.py`
+- [x] **Điền bảng so sánh** cho `MISSION_ANSWERS.md`:
+
+| Feature | Basic | Advanced | Tại sao quan trọng? |
+|---------|-------|----------|---------------------|
+| Config | Hardcode | Env vars | ... |
+| Health check | Không có | Có | ... |
+| Logging | print() | JSON | ... |
+| Shutdown | Đột ngột | Graceful | ... |
+
+### Checkpoint 1
+- [x] Hiểu tại sao hardcode secrets là nguy hiểm
+- [x] Biết cách dùng environment variables
+- [x] Hiểu vai trò của health check endpoint
+- [x] Biết graceful shutdown là gì
+
+---
+
+## Part 2: Docker Containerization (45 phút | Checkpoint 2)
+
+### Exercise 2.1 — Dockerfile cơ bản
+- [ ] Vào `02-docker/develop/`
+- [ ] Đọc `Dockerfile` và trả lời **4 câu hỏi** (ghi vào `MISSION_ANSWERS.md`):
+  - [ ] Base image là gì?
+  - [ ] Working directory là gì?
+  - [ ] Tại sao COPY `requirements.txt` trước?
+  - [ ] CMD vs ENTRYPOINT khác nhau thế nào?
+
+### Exercise 2.2 — Build và run Docker image
+- [ ] `docker build -f 02-docker/develop/Dockerfile -t my-agent:develop .`
+- [ ] `docker run -p 8000:8000 my-agent:develop`
+- [ ] Test curl như Part 1
+- [ ] Ghi lại image size: `docker images my-agent:develop`
+
+### Exercise 2.3 — Multi-stage build
+- [ ] Vào `02-docker/production/`
+- [ ] Đọc `Dockerfile` và hiểu 2 stage (builder vs runtime)
+- [ ] `docker build -t my-agent:advanced .`
+- [ ] So sánh kích thước: `docker images | grep my-agent`
+- [ ] Ghi lại kết quả vào `MISSION_ANSWERS.md` (% khác nhau)
+
+### Exercise 2.4 — Docker Compose stack
+- [ ] Đọc `docker-compose.yml` và vẽ architecture diagram
+- [ ] `docker compose up`
+- [ ] Test `curl http://localhost/health`
+- [ ] Test `curl http://localhost/ask -X POST -H "Content-Type: application/json" -d '{"question": "Explain microservices"}'`
+- [ ] Xác định các services nào được start và cách chúng giao tiếp
+
+### Checkpoint 2
+- [ ] Hiểu cấu trúc Dockerfile
+- [ ] Biết lợi ích của multi-stage builds
+- [ ] Hiểu Docker Compose orchestration
+- [ ] Biết cách debug container: `docker logs`, `docker exec`
+
+---
+
+## Part 3: Cloud Deployment (45 phút | Checkpoint 3)
+
+### Exercise 3.1 — Deploy lên Railway (15 phút)
+- [ ] Vào `03-cloud-deployment/railway/`
+- [ ] Cài Railway CLI: `npm i -g @railway/cli`
+- [ ] Đăng nhập: `railway login`
+- [ ] Init project: `railway init`
+- [ ] Set env vars:
+  - [ ] `railway variables set PORT=8000`
+  - [ ] `railway variables set AGENT_API_KEY=my-secret-key`
+- [ ] Deploy: `railway up`
+- [ ] Lấy URL: `railway domain`
+- [ ] Test public URL với curl hoặc Postman
+- [ ] Chụp screenshot deployment dashboard → lưu vào `screenshots/`
+
+### Exercise 3.2 — Deploy lên Render (15 phút) — _hoặc chọn 1 trong 2_
+- [ ] Vào `03-cloud-deployment/render/`
+- [ ] Push code lên GitHub (nếu chưa có)
+- [ ] Đăng ký render.com → New → Blueprint
+- [ ] Connect GitHub repo (Render tự đọc `render.yaml`)
+- [ ] Set environment variables trong dashboard
+- [ ] Deploy và lấy URL
+- [ ] So sánh `render.yaml` với `railway.toml` (ghi vào `MISSION_ANSWERS.md`)
+
+### Exercise 3.3 — GCP Cloud Run (optional)
+- [ ] Đọc `03-cloud-deployment/production-cloud-run/cloudbuild.yaml` và `service.yaml`
+- [ ] Hiểu CI/CD pipeline
+
+### Checkpoint 3
+- [ ] Deploy thành công lên **ít nhất 1 platform**
+- [ ] Có public URL hoạt động
+- [ ] Biết cách set environment variables trên cloud
+- [ ] Biết cách xem logs trên cloud
+
+---
+
+## Part 4: API Security (40 phút | Checkpoint 4)
+
+### Exercise 4.1 — API Key authentication
+- [ ] Vào `04-api-gateway/develop/`
+- [ ] Đọc `app.py` và trả lời (ghi vào `MISSION_ANSWERS.md`):
+  - [ ] API key được check ở đâu?
+  - [ ] Điều gì xảy ra nếu sai key?
+  - [ ] Làm sao rotate key?
+- [ ] `export AGENT_API_KEY="my-secret-key"` rồi `python app.py`
+- [ ] Test **không có key** → nhận 401 Unauthorized
+- [ ] Test **có key** → nhận 200 OK
+- [ ] Paste kết quả vào `MISSION_ANSWERS.md`
+
+### Exercise 4.2 — JWT authentication (Advanced)
+- [ ] Vào `04-api-gateway/production/`
+- [ ] Đọc `auth.py` — hiểu JWT flow
+- [ ] Lấy token: `curl http://localhost:8000/token -X POST -d '{"username":"admin","password":"secret"}'`
+- [ ] Dùng token để gọi API với `Authorization: Bearer <token>`
+
+### Exercise 4.3 — Rate limiting
+- [ ] Đọc `rate_limiter.py` và trả lời:
+  - [ ] Algorithm nào (Token bucket? Sliding window?)
+  - [ ] Limit là bao nhiêu requests/minute?
+  - [ ] Làm sao bypass limit cho admin?
+- [ ] Test gọi liên tục 20 lần và quan sát response khi bị giới hạn
+
+### Exercise 4.4 — Implement Cost Guard (**TODO trong code**)
+- [ ] Mở `cost_guard.py` — tìm hàm `check_budget` (có dấu `# TODO`)
+- [ ] Implement logic:
+  - Mỗi user có budget $10/tháng
+  - Track spending trong Redis
+  - Reset đầu tháng
+- [ ] Giải thích cách implement trong `MISSION_ANSWERS.md`
+
+### Checkpoint 4
+- [ ] Hiểu API key authentication
+- [ ] Hiểu JWT flow
+- [ ] Hiểu rate limiting
+- [ ] Implement cost guard với Redis
+
+---
+
+## Part 5: Scaling & Reliability (40 phút | Checkpoint 5)
+
+### Exercise 5.1 — Implement Health checks (**TODO trong code**)
+- [ ] Vào `05-scaling-reliability/develop/`
+- [ ] Implement `GET /health` — liveness probe (return 200 nếu process OK)
+- [ ] Implement `GET /ready` — readiness probe (return 200 nếu OK, 503 nếu chưa ready)
+
+### Exercise 5.2 — Implement Graceful Shutdown (**TODO trong code**)
+- [ ] Implement `shutdown_handler` cho SIGTERM
+  - Stop accepting new requests  
+  - Finish current requests  
+  - Close connections  
+  - Exit
+- [ ] Test bằng cách kill process và kiểm tra request đang chạy có hoàn thành không
+
+### Exercise 5.3 — Stateless design
+- [ ] Vào `05-scaling-reliability/production/`
+- [ ] Refactor: thay conversation history trong memory sang Redis
+- [ ] Hiểu tại sao stateless quan trọng khi scale nhiều instances
+
+### Exercise 5.4 — Load balancing
+- [ ] `docker compose up --scale agent=3`
+- [ ] Quan sát 3 agent instances start
+- [ ] Gọi 10 requests và kiểm tra chúng được phân tán qua các instances
+- [ ] `docker compose logs agent` — quan sát logs
+
+### Exercise 5.5 — Test stateless
+- [ ] `python test_stateless.py`
+- [ ] Kiểm tra conversation vẫn tồn tại sau khi kill 1 instance
+
+### Checkpoint 5
+- [ ] Implement health & readiness checks
+- [ ] Implement graceful shutdown
+- [ ] Refactor code thành stateless
+- [ ] Hiểu load balancing với Nginx
+- [ ] Test stateless design
+
+---
+
+## Part 6: Final Project — Production-ready Agent (60 phút)
+
+> **Đây là phần nộp điểm chính: 60/100 điểm**
+
+### Cấu trúc project cần xây dựng
+```
+my-production-agent/
+├── app/
+│   ├── __init__.py
+│   ├── main.py          # Main FastAPI app
+│   ├── config.py        # Pydantic Settings (env vars)
+│   ├── auth.py          # API key authentication
+│   ├── rate_limiter.py  # Sliding window rate limit
+│   └── cost_guard.py    # Monthly budget check
+├── utils/
+│   └── mock_llm.py      # Copy từ repo gốc
+├── Dockerfile           # Multi-stage build
+├── docker-compose.yml   # agent × 3 + redis + nginx
+├── requirements.txt
+├── .env.example
+├── .dockerignore
+├── railway.toml         # hoặc render.yaml
+└── README.md
+```
+
+### Step 1 — Project setup (5 phút)
+- [ ] Tạo folder `my-production-agent/`
+- [ ] Tạo đúng cấu trúc thư mục và file trống
+
+### Step 2 — Config management (10 phút) — `app/config.py`
+- [ ] Dùng `pydantic_settings.BaseSettings`
+- [ ] Khai báo các settings: `PORT`, `REDIS_URL`, `AGENT_API_KEY`, `LOG_LEVEL`, `RATE_LIMIT_PER_MINUTE`, `MONTHLY_BUDGET_USD`
+
+### Step 3 — Main application (15 phút) — `app/main.py`
+- [ ] `GET /health` — liveness probe
+- [ ] `GET /ready` — readiness probe (check Redis)
+- [ ] `POST /ask` — có auth, rate limit, budget check, lấy history từ Redis, gọi LLM, lưu Redis
+- [ ] Structured JSON logging
+- [ ] Graceful shutdown với SIGTERM handler
+
+### Step 4 — Authentication (5 phút) — `app/auth.py`
+- [ ] Verify `X-API-Key` header
+- [ ] Return `user_id` nếu hợp lệ
+- [ ] Raise `HTTPException(401)` nếu sai key
+
+### Step 5 — Rate limiting (10 phút) — `app/rate_limiter.py`
+- [ ] Implement sliding window với Redis
+- [ ] Raise `HTTPException(429)` khi vượt 10 req/min
+
+### Step 6 — Cost guard (10 phút) — `app/cost_guard.py`
+- [ ] Track monthly spending per user trong Redis
+- [ ] Raise `HTTPException(402)` khi vượt $10/tháng
+
+### Step 7 — Dockerfile (5 phút)
+- [ ] Multi-stage: stage 1 builder, stage 2 runtime
+- [ ] Image size phải < 500 MB
+- [ ] Có `.dockerignore`
+
+### Step 8 — Docker Compose (5 phút)
+- [ ] Service `agent` (scale 3 instances)
+- [ ] Service `redis`
+- [ ] Service `nginx` (load balancer)
+
+### Step 9 — Test locally (5 phút)
+- [ ] `docker compose up --scale agent=3`
+- [ ] Test `GET /health` → 200
+- [ ] Test `GET /ready` → 200
+- [ ] Test `POST /ask` không có key → 401
+- [ ] Test `POST /ask` có key → 200
+- [ ] Chạy script kiểm tra: `cd 06-lab-complete && python check_production_ready.py`
+
+### Step 10 — Deploy (10 phút)
+- [ ] Deploy lên Railway hoặc Render
+- [ ] Set env vars trên cloud: `REDIS_URL`, `AGENT_API_KEY`, `PORT`, `LOG_LEVEL`
+- [ ] Lấy public URL
+- [ ] Test tất cả endpoints từ public URL
+
+### Validation — chạy `check_production_ready.py`
+- [ ] Dockerfile exists và valid
+- [ ] Multi-stage build ✓
+- [ ] `.dockerignore` exists ✓
+- [ ] Health endpoint `/health` → 200
+- [ ] Readiness endpoint `/ready` → 200
+- [ ] Auth required → 401 without key
+- [ ] Rate limiting → 429 sau khi vượt limit
+- [ ] Cost guard → 402 khi vượt budget
+- [ ] Graceful shutdown (SIGTERM handled)
+- [ ] Stateless (state trong Redis, không trong memory)
+- [ ] Structured logging (JSON format)
+
+---
+
+## 📦 Deliverables — Nộp Bài
+
+### File 1: `MISSION_ANSWERS.md` (40 điểm)
+- [ ] Part 1: Liệt kê ≥5 anti-patterns + bảng so sánh basic vs production
+- [ ] Part 2: Trả lời 4 câu hỏi Dockerfile + ghi image size (MB, % khác nhau)
+- [ ] Part 3: URL deployment + screenshot Railway/Render + so sánh `render.yaml` vs `railway.toml`
+- [ ] Part 4: Paste test output (401, 200, 429) + giải thích cost guard
+- [ ] Part 5: Giải thích health/ready implementation + test stateless
+
+### File 2: Source code trong `app/` (60 điểm)
+- [ ] Code chạy không lỗi
+- [ ] Multi-stage Dockerfile (size < 500 MB)
+- [ ] API key authentication
+- [ ] Rate limiting (10 req/min)
+- [ ] Cost guard ($10/month)
+- [ ] Health + readiness checks
+- [ ] Graceful shutdown
+- [ ] Stateless design (Redis)
+- [ ] **Không có hardcoded secrets**
+
+### File 3: `DEPLOYMENT.md`
+- [ ] Public URL (Railway hoặc Render)
+- [ ] Platform đã dùng
+- [ ] Các test commands (health check, auth test, rate limit test)
+- [ ] Danh sách env vars đã set
+- [ ] Screenshots trong thư mục `screenshots/`
+
+### Pre-submission checklist
+- [ ] Repository **public** (hoặc instructor có access)
+- [ ] `MISSION_ANSWERS.md` đã hoàn chỉnh
+- [ ] `DEPLOYMENT.md` có public URL đang hoạt động
+- [ ] `README.md` có hướng dẫn setup rõ ràng
+- [ ] **Không có file `.env`** trong repo (chỉ `.env.example`)
+- [ ] Không có hardcoded secrets trong code hoặc commit history
+- [ ] Screenshots trong `screenshots/`
+- [ ] Commit history rõ ràng
+
+### Self-test cuối cùng
+- [ ] `curl https://your-app.railway.app/health` → `{"status": "ok"}`
+- [ ] `curl https://your-app.railway.app/ask` (không có key) → 401
+- [ ] `curl -H "X-API-Key: YOUR_KEY" ... /ask` → 200
+- [ ] Gọi 15+ lần liên tiếp → cuối cùng nhận 429
+- [ ] Test từ thiết bị khác để chắc URL hoạt động public
+
+---
+
+## 📊 Grading Rubric (100 điểm)
+
+| Criteria | Điểm | Mô tả |
+|----------|------|-------|
+| Functionality | 20 | Agent hoạt động đúng |
+| Docker | 15 | Multi-stage, optimized |
+| Security | 20 | Auth + rate limit + cost guard |
+| Reliability | 20 | Health checks + graceful shutdown |
+| Scalability | 15 | Stateless + load balanced |
+| Deployment | 10 | Public URL hoạt động |
+| **Total** | **100** | |
