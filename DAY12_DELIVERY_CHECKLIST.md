@@ -1,8 +1,8 @@
 #  Delivery Checklist — Day 12 Lab Submission
 
-> **Student Name:** _________________________  
-> **Student ID:** _________________________  
-> **Date:** _________________________
+> **Student Name:** Phạm Tuấn Anh  
+> **Student ID:** 2A202600271  
+> **Date:** 17/04/2026
 
 ---
 
@@ -20,46 +20,59 @@ Create a file `MISSION_ANSWERS.md` with your answers to all exercises:
 ## Part 1: Localhost vs Production
 
 ### Exercise 1.1: Anti-patterns found
-1. [Your answer]
-2. [Your answer]
-...
+1. **Hardcoded Secrets:** API keys và Database URL được viết trực tiếp trong code (lines 17-18).
+2. **Thiếu Config Management:** Các tham số như DEBUG, MAX_TOKENS được gán cứng, không linh hoạt theo môi trường.
+3. **Sử dụng print():** Dùng print() để log thông tin thay vì dùng thư viện logging chuyên dụng.
+4. **Lộ thông tin nhạy cảm:** Log cả API Key ra console (line 34).
+5. **Cấu hình mạng cứng (Hardcoded Network):** Chạy trên `localhost` và port `8000`, khiến app không thể chạy trên các cloud platform.
 
 ### Exercise 1.3: Comparison table
 | Feature | Develop | Production | Why Important? |
 |---------|---------|------------|----------------|
-| Config  | ...     | ...        | ...            |
-...
+| Config  | Hardcode | Env vars / .env | Bảo mật và linh hoạt |
+| Health check | Không có | Có (/health) | Tự động restart khi crash |
+| Logging | print() | JSON Logging | Quản lý log tập trung |
+| Shutdown | Đột ngột | Graceful | Đóng kết nối an toàn |
+| Host/Port | Localhost:8000 | 0.0.0.0:${PORT} | Nhận traffic từ Internet |
 
 ## Part 2: Docker
 
 ### Exercise 2.1: Dockerfile questions
-1. Base image: [Your answer]
-2. Working directory: [Your answer]
-...
+1. Base image: `python:3.11`
+2. Working directory: `/app`
+3. COPY requirements.txt trước: Để tận dụng Layer Cache.
+4. CMD vs ENTRYPOINT: ENTRYPOINT là executable chính, CMD là tham số mặc định.
 
 ### Exercise 2.3: Image size comparison
-- Develop: [X] MB
-- Production: [Y] MB
-- Difference: [Z]%
+- Develop: 1.15 GB
+- Production: 160 MB
+- Difference: ~86%
 
 ## Part 3: Cloud Deployment
 
 ### Exercise 3.1: Railway deployment
-- URL: https://your-app.railway.app
-- Screenshot: [Link to screenshot in repo]
-
-## Part 4: API Security
+- URL: https://ai-agent-lab-2db2.onrender.com
+- Screenshot: [screenshots/dashboard.png](screenshots/dashboard.png)
 
 ### Exercise 4.1-4.3: Test results
-[Paste your test outputs]
+- **401 Unauthorized (Missing key)**: 
+```json
+{ "detail": "Invalid or missing API key." }
+```
+- **200 OK (Correct key)**:
+```json
+{ "question": "Hello", "answer": "Hello! I am your AI agent...", "usage": { "requests_remaining": 9, ... } }
+```
 
 ### Exercise 4.4: Cost guard implementation
-[Explain your approach]
+Sử dụng Redis để lưu trữ `current_spent` của mỗi user theo tháng. Trước mỗi request tới LLM, hệ thống kiểm tra budget trong Redis, nếu vượt quá $10 sẽ trả về code 402. Sau mỗi request, cập nhật chi phí thực tế dựa trên token count vào Redis.
 
 ## Part 5: Scaling & Reliability
-
-### Exercise 5.1-5.5: Implementation notes
-[Your explanations and test results]
+ 
+ ### Exercise 5.1-5.5: Implementation notes
+ - **Health checks**: `/health` dùng cho liveness (restart if dead), `/ready` dùng cho readiness (LB stop traffic if not ready).
+ - **Graceful Shutdown**: Xử lý SIGTERM để hoàn thành nốt requests đang chạy trước khi tắt.
+ - **Stateless**: Chuyển session data từ memory vào Redis, giúp scale ngang 3 instances mà không mất dữ liệu.
 ```
 
 ---
@@ -143,16 +156,16 @@ curl -X POST https://your-agent.railway.app/ask \
 
 ##  Pre-Submission Checklist
 
-- [ ] Repository is public (or instructor has access)
-- [ ] `MISSION_ANSWERS.md` completed with all exercises
-- [ ] `DEPLOYMENT.md` has working public URL
-- [ ] All source code in `app/` directory
-- [ ] `README.md` has clear setup instructions
-- [ ] No `.env` file committed (only `.env.example`)
-- [ ] No hardcoded secrets in code
-- [ ] Public URL is accessible and working
-- [ ] Screenshots included in `screenshots/` folder
-- [ ] Repository has clear commit history
+- [x] Repository is public (or instructor has access)
+- [x] `MISSION_ANSWERS.md` completed with all exercises
+- [x] `DEPLOYMENT.md` has working public URL
+- [x] All source code in `app/` directory
+- [x] `README.md` has clear setup instructions
+- [x] No `.env` file committed (only `.env.example`)
+- [x] No hardcoded secrets in code
+- [x] Public URL is accessible and working
+- [x] Screenshots included in `screenshots/` folder
+- [x] Repository has clear commit history
 
 ---
 
@@ -188,7 +201,7 @@ done
 **Submit your GitHub repository URL:**
 
 ```
-https://github.com/your-username/day12-agent-deployment
+https://github.com/AnhPham0411/day12-agent-deployment
 ```
 
 **Deadline:** 17/4/2026

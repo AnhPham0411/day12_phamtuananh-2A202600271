@@ -149,14 +149,15 @@ async def ask_agent(
     # ✅ Ghi nhận usage (mock token count)
     input_tokens = len(body.question.split()) * 2
     output_tokens = len(response_text.split()) * 2
-    usage = cost_guard.record_usage(username, input_tokens, output_tokens)
+    total_spent = cost_guard.record_usage(username, input_tokens, output_tokens)
 
     return {
         "question": body.question,
         "answer": response_text,
         "usage": {
             "requests_remaining": rate_info["remaining"],
-            "budget_remaining_usd": usage.total_cost_usd,
+            "total_spent_usd": round(total_spent, 6),
+            "budget_remaining_usd": max(0, round(cost_guard.monthly_budget_usd - total_spent, 6)),
         },
     }
 
@@ -173,9 +174,9 @@ def admin_stats(user: dict = Depends(verify_token)):
     if user["role"] != "admin":
         raise HTTPException(403, "Admin only")
     return {
-        "total_users": "N/A (in-memory demo)",
-        "global_cost_usd": cost_guard._global_cost,
-        "global_budget_usd": cost_guard.global_daily_budget_usd,
+        "total_users": "N/A (Redis-based demo)",
+        "monthly_budget_per_user": cost_guard.monthly_budget_usd,
+        "status": "Redis backend active",
     }
 
 
@@ -199,4 +200,4 @@ if __name__ == "__main__":
     print("  student / demo123  (10 req/min, $1/day budget)")
     print("  teacher / teach456 (100 req/min, $1/day budget)")
     print(f"\nDocs: http://localhost:{port}/docs\n")
-    uvicorn.run(app, host="0.0.0.0", port=port, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)

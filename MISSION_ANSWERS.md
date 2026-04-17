@@ -34,9 +34,85 @@
 - Production: 160 MB
 - Difference: ~86%
 
+### Part 3: Cloud Deployment
+
+### Exercise 3.1: Deployment Info
+- **Public URL**: https://ai-agent-lab-2db2.onrender.com
+- **Platform**: Render (Singapore)
+- **Status**: Deployment successful with healthy Liveness/Readiness probes.
+
 ### Exercise 3.2: Comparison of render.yaml vs railway.toml
 - **railway.toml**: Chú trọng tính tối giản, dễ cấu hình nhanh qua CLI. Phù hợp cho các service đơn lẻ hoặc deploy nhanh.
 - **render.yaml**: Là "Infrastructure as Code" thực thụ, cho phép quản lý toàn bộ hệ sinh thái (Web, Redis, Postgres) trong một file duy nhất. Dễ dàng tái sử dụng và quản lý version.
 
-### Exercise 3.1: Deployment URL
-- Public URL: [Sẽ cập nhật sau khi deploy]
+### Part 4: API Security
+
+#### Exercise 4.1: API Key authentication
+- **API key được check ở đâu?**: Được kiểm tra trong hàm `verify_api_key`, hàm này được tiêm (inject) vào endpoint `/ask` thông qua `Depends`.
+- **Điều gì xảy ra nếu sai key?**: Hệ thống sẽ trả về lỗi `403 Forbidden` với nội dung "Invalid API key." (Nếu thiếu key sẽ trả về `401 Unauthorized`).
+- **Làm sao rotate key?**: Thay đổi giá trị của biến môi trường `AGENT_API_KEY` mà không cần sửa code.
+
+- **Test result (401 - Missing key)**:
+```json
+{ "detail": "Invalid or missing API key. Include header: X-API-Key: <key>" }
+```
+- **Test result (200 - Correct key)**:
+```json
+{
+  "question": "Hello",
+  "answer": "Hello! I am your AI agent. How can I help you today?",
+  "session_id": "default",
+  "cost_usd": 0.0003,
+  "timestamp": "2026-04-17T09:30:00Z"
+}
+```
+- **Test result (429 - Rate Limit Exceeded)**:
+```json
+{
+  "detail": "Rate limit exceeded: 20 req/min",
+  "retry_after": "60"
+}
+```
+#### Exercise 4.2: JWT authentication
+- **JWT flow**: Client gửi username/password để lấy token -> Server trả về JWT. Các request sau đó Client gửi token này trong header `Authorization: Bearer <token>`. Server chỉ cần verify chữ ký (signature) để lấy thông tin user mà không cần truy vấn database.
+
+#### Exercise 4.3: Rate limiting
+- **Algorithm**: Sliding Window Counter (dùng `deque` để lưu timestamps).
+- **Limit**: 10 requests/phút đối với User thường, 100 requests/phút đối với Admin.
+- **Bypass for admin**: Sử dụng một instance `RateLimiter` riêng (`rate_limiter_admin`) với cấu hình cao hơn hoặc kiểm tra role của user trước khi áp dụng limiter.
+
+#### Exercise 4.4: Cost Guard Implementation
+- **Logic**: 
+  - Mỗi user có budget $10/tháng.
+  - Sử dụng Redis làm storage để đảm bảo tính Stateless (không mất dữ liệu khi restart container).
+### Part 5: Scaling & Reliability
+
+#### Exercise 5.1: Health & Readiness checks
+- **Liveness probe (/health)**: Giúp hệ thống biết container còn sống hay không. Nếu endpoint này trả về lỗi liên tục, platform sẽ tự động restart container.
+- **Readiness probe (/ready)**: Giúp Load Balancer biết instance này đã sẵn sàng nhận traffic chưa (đã kết nối Redis, DB xong chưa). Nếu chưa, nó sẽ tạm ngừng gửi request tới instance này.
+
+#### Exercise 5.2: Graceful Shutdown
+- **Tại sao quan trọng?**: Giúp đảm bảo các request đang xử lý (như đang chờ LLM trả lời) không bị ngắt quãng đột ngột khi container bị tắt/update. Server sẽ đợi cho đến khi xử lý xong các "in-flight requests" rồi mới thực sự tắt hẳn.
+
+#### Exercise 5.3: Stateless Design
+- **Tại sao stateless quan trọng khi scale?**: Trong hệ thống có nhiều instance (scale out), một user có thể được phục vụ bởi bất kỳ instance nào. Nếu lưu session trong memory instance A, khi user được điều hướng sang instance B, dữ liệu sẽ bị mất. Lưu session vào Redis giúp mọi instance đều truy cập được dữ liệu chung.
+- **Kết quả test stateless**:
+```text
+Request 1: [instance-a] Q: What is Docker?
+Request 2: [instance-b] Q: Why do we need containers?
+...
+✅ Session history preserved across all instances via Redis!
+```
+
+### Part 6: Final Project - Production AI Agent
+
+Dự án đã được hoàn thiện với các tiêu chuẩn sau:
+1. **Stateless Architecture**: Chuyển toàn bộ Rate Limit, Cost Guard và Lịch sử hội thoại vào Redis.
+2. **Security**: Xác thực qua API Key, giới hạn truy cập theo Sliding Window và bảo vệ ngân sách theo tháng.
+3. **Observability**: Hệ thống logging dưới dạng JSON structured, giúp dễ dàng tích hợp với CloudWatch/ELK.
+4. **Reliability**:
+   - Health check tự động restart container nếu lỗi.
+   - Graceful shutdown đảm bảo không mất request khách hàng.
+   - Multi-stage Dockerfile giúp image nhỏ gọn (< 300MB) và bảo mật (non-root user).
+
+**Kết luận**: Agent đã sẵn sàng để triển khai thực tế trên các nền tảng Cloud như Render, Railway hoặc Kubernetes.
